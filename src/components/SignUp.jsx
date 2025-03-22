@@ -100,7 +100,7 @@ const SignUp = () => {
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                className="w-full p-4 bg-gray-900/60 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all duration-300"
+                className="w-full p-4 bg-gray-900/60 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-400 hover:border-yellow-400 focus:border-transparent transition-all duration-300"
                 required
               />
             </div>
@@ -114,7 +114,7 @@ const SignUp = () => {
                 name="username"
                 value={formData.username}
                 onChange={handleChange}
-                className="w-full p-4 bg-gray-900/60 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all duration-300"
+                className="w-full p-4 bg-gray-900/60 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-400 hover:border-yellow-400 focus:border-transparent transition-all duration-300"
                 required
               />
             </div>
@@ -128,21 +128,21 @@ const SignUp = () => {
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
-                className="w-full p-4 bg-gray-900/60 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all duration-300"
+                className="w-full p-4 bg-gray-900/60 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-400 hover:border-yellow-400 focus:border-transparent transition-all duration-300"
                 required
               />
             </div>
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-4 px-8 rounded-lg bg-yellow-500 hover:bg-yellow-400 text-black font-semibold text-lg transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 mt-6"
+              className="w-full py-4 px-8 rounded-lg bg-yellow-500 hover:bg-yellow-600 hover:text-white text-black font-semibold text-lg transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 mt-6 transform hover:-translate-y-1"
             >
               {loading ? 'Creating Account...' : 'Sign Up'}
             </button>
           </form>
           <div className="mt-6 text-center text-gray-400">
             <span>Already have an account? </span>
-            <Link to="/signin" className="text-yellow-400 hover:text-yellow-300 font-semibold transition-colors duration-300">
+            <Link to="/signin" className="text-yellow-400 hover:text-yellow-200 font-semibold transition-colors duration-300 hover:underline">
               Sign In
             </Link>
           </div>

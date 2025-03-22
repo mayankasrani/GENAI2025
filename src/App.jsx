@@ -7,6 +7,7 @@ import { Sparkles, Clock, DollarSign, AlertCircle, Send } from 'lucide-react'
 import { UserProvider } from './context/UserContext';
 import SignUp from './components/SignUp';
 import { Link } from 'react-router-dom';
+import Header from './components/header'
 
 function App() {
   const [input, setInput] = useState('')
@@ -58,17 +59,10 @@ function App() {
   return (
     <UserProvider>
       <div className="min-h-screen flex flex-col items-center justify-center p-4 md:p-8 bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white relative">
-        {/* Sign In button in top right corner */}
-        <div className="absolute top-4 right-4 z-50">
-          <Link 
-            to="/signin" 
-            className="px-6 py-2 rounded-lg bg-yellow-500 hover:bg-yellow-400 text-black font-semibold transition-all duration-300 shadow-lg hover:shadow-xl"
-          >
-            Sign In
-          </Link>
+        <Header /> 
+        <div className="absolute top-4 right-4 z-50 flex gap-4">
         </div>
 
-        {/* Remove SignUp component and continue with main content */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -95,6 +89,7 @@ function App() {
             </div>
 
             <div className="p-6 space-y-6">
+              {/* Remove this duplicate sign in/up section */}
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-300">Enter your decision</label>
                 <textarea
