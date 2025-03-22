@@ -1,132 +1,46 @@
-import { useState, useEffect, useRef } from "react"
-import axios from "axios"
-import { motion, AnimatePresence } from "framer-motion"
-import "./App.css"
-import {
-  Sparkles,
-  Clock,
-  DollarSign,
-  AlertCircle,
-  Send,
-  Brain,
-  Coins,
-  Calendar,
-  TrendingUp,
-  BarChart4,
-  PiggyBank,
-  Lightbulb,
-} from "lucide-react"
-import Particles from "./components/Particles"
-import { TypeAnimation } from "react-type-animation"
-import confetti from "canvas-confetti"
+import { useState } from 'react'
+import axios from 'axios'
+import { motion } from 'framer-motion'
+import './App.css'
 
-function App() {
-  const [input, setInput] = useState("")
-  const [response, setResponse] = useState("")
+import { Sparkles, Clock, DollarSign, AlertCircle, Send } from 'lucide-react'
+
+function App() 
+{
+  const [input, setInput] = useState('')
+  const [response, setResponse] = useState('')
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState("")
+  const [error, setError] = useState('')
   const [showToast, setShowToast] = useState(false)
-  const [toast, setToast] = useState({ title: "", message: "", type: "" })
-  const [showIntro, setShowIntro] = useState(true)
-  const [analysisStarted, setAnalysisStarted] = useState(false)
-  const [analysisComplete, setAnalysisComplete] = useState(false)
-  const [metrics, setMetrics] = useState(null)
-  const [activeTab, setActiveTab] = useState("summary")
+  const [toast, setToast] = useState({ title: '', message: '', type: '' })
 
-  const resultRef = useRef(null)
-  const canvasRef = useRef(null)
-
-  // Simulate metrics calculation based on the response
-  const calculateMetrics = (text) => {
-    // In a real app, this would be calculated from the AI response
-    return {
-      financialImpact: Math.floor(Math.random() * 100),
-      timeImpact: Math.floor(Math.random() * 100),
-      healthImpact: Math.floor(Math.random() * 100),
-      overallScore: Math.floor(Math.random() * 100),
-    }
-  }
-
-  useEffect(() => {
-    // Auto-hide intro after 3 seconds
-    const timer = setTimeout(() => {
-      setShowIntro(false)
-    }, 3000)
-
-    return () => clearTimeout(timer)
-  }, [])
-
-  useEffect(() => {
-    if (analysisComplete && resultRef.current) {
-      // Scroll to results
-      resultRef.current.scrollIntoView({ behavior: "smooth" })
-
-      // Trigger confetti when analysis is complete
-      const duration = 3 * 1000
-      const animationEnd = Date.now() + duration
-      const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 }
-
-      function randomInRange(min, max) {
-        return Math.random() * (max - min) + min
-      }
-
-      const interval = setInterval(() => {
-        const timeLeft = animationEnd - Date.now()
-
-        if (timeLeft <= 0) {
-          return clearInterval(interval)
-        }
-
-        const particleCount = 50 * (timeLeft / duration)
-
-        // Use confetti
-        confetti({
-          ...defaults,
-          particleCount,
-          origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
-        })
-        confetti({
-          ...defaults,
-          particleCount,
-          origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
-        })
-      }, 250)
-    }
-  }, [analysisComplete])
-
-  const showToastMessage = (title, message, type) => {
+  const showToastMessage = (title, message, type) => 
+  {
     setToast({ title, message, type })
     setShowToast(true)
     setTimeout(() => setShowToast(false), 3000)
   }
 
-  const handleSubmit = async () => {
-    if (!input.trim()) {
-      showToastMessage("Input required", "Please enter a decision to analyze", "error")
+  const handleSubmit = async () => 
+  {
+    //Checks if field is not empty
+    if (!input.trim()) 
+    {
+      showToastMessage('This field cannot be left blank', 'Please enter a decision to analyze', 'error')
       return
     }
-
+    
     setLoading(true)
-    setError("")
-    setAnalysisStarted(true)
-    setAnalysisComplete(false)
-
-    try {
-      // Simulate AI thinking with a delay
-      await new Promise((resolve) => setTimeout(resolve, 2500))
-
-      const res = await axios.post("http://localhost:5000/analyze", { text: input })
+    setError('')
+    
+    try 
+    {
+      const res = await axios.post('http://localhost:5000/analyze', { text: input })
       setResponse(res.data.result)
-
-      // Calculate metrics based on the response
-      setMetrics(calculateMetrics(res.data.result))
-
-      showToastMessage("Analysis complete", "Your decision has been analyzed", "success")
-      setAnalysisComplete(true)
+      showToastMessage('Analysis complete', 'Your decision has been analyzed', 'success')
     } catch (err) {
-      setError("Failed to analyze your decision. Please try again.")
-      showToastMessage("Something went wrong", "Failed to analyze your decision", "error")
-      setAnalysisStarted(false)
+      setError('Failed to analyze your decision. Please try again.')
+      showToastMessage('Something went wrong', 'Failed to analyze your decision', 'error')
     } finally {
       setLoading(false)
     }
@@ -134,300 +48,155 @@ function App() {
 
   const examples = [
     "I want to drink bubble tea every day for a year.",
-    "I'm considering buying a $1000 gaming console.",
-    "Should I subscribe to 5 streaming services?",
-    "What if I quit my job to travel for 6 months?",
+    "I'm considering buying a gaming console for $600.",
+    "Should I subscribe to 3 streaming services?",
+    "Should I pull an all-nighter to study for my calc test"
   ]
 
-  const renderGauge = (value, label, icon) => {
-    const angle = (value / 100) * 180
-
-    return (
-      <div className="gauge-container">
-        <div className="gauge">
-          <div className="gauge-body">
-            <div className="gauge-fill" style={{ transform: `rotate(${angle}deg)` }}></div>
-            <div className="gauge-cover">
-              <div className="gauge-value">{value}</div>
-              <div className="gauge-label">{label}</div>
-              {icon}
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 md:p-8 bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white">
+      {/* Toast notification */}
+      {showToast && (
+        <motion.div 
+          initial={{ opacity: 0, y: -50 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -50 }}
+          className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg max-w-md ${
+            toast.type === 'error' ? 'bg-red-900 border border-red-700' : 'bg-green-900 border border-green-700'
+          }`}
+        >
+          <div className="flex items-start">
+            <div className={`flex-shrink-0 ${toast.type === 'error' ? 'text-red-400' : 'text-green-400'}`}>
+              {toast.type === 'error' ? <AlertCircle className="h-5 w-5" /> : <Sparkles className="h-5 w-5" />}
+            </div>
+            <div className="ml-3">
+              <p className="text-sm font-medium text-white">{toast.title}</p>
+              <p className="mt-1 text-sm text-gray-300">{toast.message}</p>
             </div>
           </div>
-        </div>
-      </div>
-    )
-  }
+        </motion.div>
+      )}
 
-  return (
-    <div className="app-container">
-      <Particles />
-
-      {/* Toast notification */}
-      <AnimatePresence>
-        {showToast && (
-          <motion.div
-            initial={{ opacity: 0, y: -50 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -50 }}
-            className={`toast ${toast.type === "error" ? "toast-error" : "toast-success"}`}
-          >
-            <div className="toast-content">
-              <div className={`toast-icon ${toast.type === "error" ? "toast-icon-error" : "toast-icon-success"}`}>
-                {toast.type === "error" ? <AlertCircle className="h-5 w-5" /> : <Sparkles className="h-5 w-5" />}
-              </div>
-              <div className="toast-message">
-                <p className="toast-title">{toast.title}</p>
-                <p className="toast-description">{toast.message}</p>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {showIntro && (
-          <motion.div className="intro-overlay" initial={{ opacity: 1 }} exit={{ opacity: 0 }}>
-            <motion.div
-              className="intro-content"
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 0.5 }}
-            >
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 20, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
-                className="intro-icon"
-              >
-                <Brain className="h-16 w-16 text-yellow-400" />
-              </motion.div>
-              <h1 className="intro-title">LifeCost AI</h1>
-              <p className="intro-subtitle">Analyzing the true cost of your decisions</p>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <motion.div
+      <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.3 }}
-        className="main-container"
+        transition={{ duration: 0.5 }}
+        className="w-full max-w-3xl"
       >
-        <div className="card main-card">
-          <div className="card-header">
-            <div className="logo-container">
+        <div className="border border-gray-700 bg-gradient-to-tr from-gray-800 to-gray-700 rounded-xl shadow-xl overflow-hidden">
+          <div className="p-6 pb-4 border-b border-gray-700">
+            <div className="flex items-center gap-3">
               <motion.div
                 animate={{ rotate: 360 }}
-                transition={{ duration: 20, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
-                className="logo-icon"
+                transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
               >
-                <Brain className="h-8 w-8 text-yellow-400" />
+                <Sparkles className="h-8 w-8 text-yellow-400" />
               </motion.div>
               <div>
-                <h1 className="app-title">LifeCost AI</h1>
-                <p className="app-subtitle">Analyze the true cost of your life decisions</p>
+                <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-amber-300">
+                  LifeCost AI </h1>
+                <p className="text-gray-300 mt-1">
+                  Analyze the true cost of your life decisions
+                </p>
               </div>
             </div>
           </div>
-
-          <div className="card-body">
-            <div className="input-group">
-              <label className="input-label">
-                <Lightbulb className="h-4 w-4 mr-2" />
-                Enter your decision
-              </label>
+          
+          <div className="p-6 space-y-6">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-300">Enter your decision</label>
               <textarea
-                className="input-textarea"
+                className="w-full min-h-[120px] p-4 bg-gray-900/60 border border-gray-600 rounded-lg text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-400"
                 placeholder="E.g. I want to drink bubble tea every day for a year."
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
               />
             </div>
-
-            <div className="examples-container">
-              <p className="examples-label">
-                <Sparkles className="h-4 w-4 mr-2" />
-                Or try one of these examples:
-              </p>
-              <div className="examples-buttons">
+            
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-gray-300">Or try one of these examples:</p>
+              <div className="flex flex-wrap gap-2">
                 {examples.map((example, index) => (
-                  <button key={index} className="example-button" onClick={() => setInput(example)}>
+                  <button 
+                    key={index}
+                    className="px-3 py-1 text-sm bg-gray-800/60 border border-gray-600 hover:bg-gray-700 text-gray-300 rounded-md transition-colors"
+                    onClick={() => setInput(example)}
+                  >
                     {example}
                   </button>
                 ))}
               </div>
             </div>
           </div>
-
-          <div className="card-footer">
-            <motion.button
-              className="submit-button"
+          
+          <div className="p-6 border-t border-gray-700">
+            <button
+              className="w-full font-semibold text-lg py-4 px-6 rounded-xl transition-all duration-300 shadow-lg bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-400 hover:to-amber-400 text-black flex items-center justify-center"
               onClick={handleSubmit}
               disabled={loading}
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
             >
               {loading ? (
                 <motion.div
                   animate={{ rotate: 360 }}
-                  transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
-                  className="button-icon"
+                  transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                  className="mr-2"
                 >
                   <Clock className="h-5 w-5" />
                 </motion.div>
               ) : (
-                <Send className="button-icon h-5 w-5" />
+                <Send className="mr-2 h-5 w-5" />
               )}
-              {loading ? "Analyzing..." : "Analyze Decision"}
-            </motion.button>
-
+              {loading ? 'Analyzing, Please Wait...' : 'Analyze Decision'}
+            </button>
+            
             {error && (
-              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="error-message">
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-4 p-4 bg-red-900/40 border border-red-700 rounded-lg flex items-center gap-2 text-red-200"
+              >
                 <AlertCircle className="h-5 w-5 text-red-400" />
                 <p>{error}</p>
               </motion.div>
             )}
           </div>
         </div>
-
-        <AnimatePresence>
-          {analysisStarted && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.5 }}
-              className="analysis-container"
-              ref={resultRef}
-            >
-              <div className="card analysis-card">
-                <div className="card-header analysis-header">
-                  <h2 className="analysis-title">
-                    <DollarSign className="h-5 w-5" />
-                    Analysis Results
-                  </h2>
-                </div>
-
-                {!analysisComplete ? (
-                  <div className="analysis-loading">
-                    <div className="brain-container">
-                      <motion.div
-                        animate={{
-                          scale: [1, 1.1, 1],
-                          opacity: [0.7, 1, 0.7],
-                        }}
-                        transition={{
-                          duration: 2,
-                          repeat: Number.POSITIVE_INFINITY,
-                          ease: "easeInOut",
-                        }}
-                        className="brain-pulse"
-                      >
-                        <Brain className="brain-icon" />
-                      </motion.div>
-                      <div className="brain-waves">
-                        {[...Array(5)].map((_, i) => (
-                          <motion.div
-                            key={i}
-                            className="brain-wave"
-                            animate={{
-                              opacity: [0, 1, 0],
-                              scale: [1, 1.5, 1],
-                              x: [0, 100, 0],
-                            }}
-                            transition={{
-                              duration: 2,
-                              repeat: Number.POSITIVE_INFINITY,
-                              delay: i * 0.2,
-                              ease: "easeInOut",
-                            }}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                    <p className="loading-text">
-                      <TypeAnimation
-                        sequence={[
-                          "Analyzing your decision...",
-                          1000,
-                          "Calculating financial impact...",
-                          1000,
-                          "Evaluating time costs...",
-                          1000,
-                          "Considering health factors...",
-                          1000,
-                          "Generating insights...",
-                          1000,
-                        ]}
-                        repeat={Number.POSITIVE_INFINITY}
-                      />
-                    </p>
-                  </div>
-                ) : (
-                  <div className="analysis-content">
-                    <div className="decision-summary">
-                      <p className="decision-label">Your decision:</p>
-                      <p className="decision-text">"{input}"</p>
-                    </div>
-
-                    <div className="tabs">
-                      <button
-                        className={`tab ${activeTab === "summary" ? "active-tab" : ""}`}
-                        onClick={() => setActiveTab("summary")}
-                      >
-                        <BarChart4 className="h-4 w-4 mr-2" />
-                        Summary
-                      </button>
-                      <button
-                        className={`tab ${activeTab === "metrics" ? "active-tab" : ""}`}
-                        onClick={() => setActiveTab("metrics")}
-                      >
-                        <PiggyBank className="h-4 w-4 mr-2" />
-                        Metrics
-                      </button>
-                    </div>
-
-                    <div className="tab-content">
-                      {activeTab === "summary" ? (
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="summary-content">
-                          <h3 className="content-title">Impact Analysis:</h3>
-                          <p className="content-text">{response}</p>
-                        </motion.div>
-                      ) : (
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="metrics-content">
-                          <div className="metrics-grid">
-                            {renderGauge(metrics.financialImpact, "Financial", <Coins className="gauge-icon" />)}
-                            {renderGauge(metrics.timeImpact, "Time", <Calendar className="gauge-icon" />)}
-                            {renderGauge(metrics.healthImpact, "Health", <TrendingUp className="gauge-icon" />)}
-                            {renderGauge(metrics.overallScore, "Overall", <BarChart4 className="gauge-icon" />)}
-                          </div>
-
-                          <div className="metrics-summary">
-                            <h3 className="metrics-title">Decision Score: {metrics.overallScore}/100</h3>
-                            <p className="metrics-description">
-                              {metrics.overallScore > 70
-                                ? "This decision appears to be beneficial overall."
-                                : metrics.overallScore > 40
-                                  ? "This decision has mixed implications."
-                                  : "This decision may have significant negative impacts."}
-                            </p>
-                          </div>
-                        </motion.div>
-                      )}
-                    </div>
-                  </div>
-                )}
+        
+        {response && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="mt-8"
+          >
+            <div className="border border-gray-700 bg-gray-900/80 rounded-xl shadow-xl overflow-hidden">
+              <div className="p-4 bg-gray-800/60 border-b border-gray-700">
+                <h2 className="flex items-center gap-2 text-xl font-bold text-yellow-400">
+                  <DollarSign className="h-5 w-5" />
+                  Analysis Results
+                </h2>
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+              <div className="p-6">
+                <div className="space-y-4">
+                  <div className="p-4 bg-gray-800/40 border border-gray-700 rounded-lg">
+                    <p className="text-sm font-medium text-gray-400">Your decision:</p>
+                    <p className="text-gray-200 italic">"{input}"</p>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-semibold text-yellow-400">Impact Analysis:</h3>
+                    <p className="text-lg leading-relaxed text-gray-100 whitespace-pre-line">{response}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
       </motion.div>
-
-      <footer className="app-footer">
-        <p>© {new Date().getFullYear()} LifeCost AI • Analyze smarter, live better</p>
+      
+      <footer className="mt-12 text-center text-gray-500 text-sm">
+        <p>© {new Date().getFullYear()} LifeCost AI • Analyze smarter, live better by Ansh Satish, Mayank Asrani and Josh</p>
       </footer>
-
-      <canvas ref={canvasRef} className="confetti-canvas"></canvas>
     </div>
   )
 }
