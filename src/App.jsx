@@ -4,9 +4,11 @@ import { motion } from 'framer-motion'
 import './App.css'
 
 import { Sparkles, Clock, DollarSign, AlertCircle, Send } from 'lucide-react'
+import { UserProvider } from './context/UserContext';
+import SignUp from './components/SignUp';
+import { Link } from 'react-router-dom';
 
-function App() 
-{
+function App() {
   const [input, setInput] = useState('')
   const [response, setResponse] = useState('')
   const [loading, setLoading] = useState(false)
@@ -54,150 +56,140 @@ function App()
   ]
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 md:p-8 bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white">
-      {/* Toast notification */}
-      {showToast && (
-        <motion.div 
-          initial={{ opacity: 0, y: -50 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -50 }}
-          className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg max-w-md ${
-            toast.type === 'error' ? 'bg-red-900 border border-red-700' : 'bg-green-900 border border-green-700'
-          }`}
-        >
-          <div className="flex items-start">
-            <div className={`flex-shrink-0 ${toast.type === 'error' ? 'text-red-400' : 'text-green-400'}`}>
-              {toast.type === 'error' ? <AlertCircle className="h-5 w-5" /> : <Sparkles className="h-5 w-5" />}
-            </div>
-            <div className="ml-3">
-              <p className="text-sm font-medium text-white">{toast.title}</p>
-              <p className="mt-1 text-sm text-gray-300">{toast.message}</p>
-            </div>
-          </div>
-        </motion.div>
-      )}
+    <UserProvider>
+      <div className="min-h-screen flex flex-col items-center justify-center p-4 md:p-8 bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white relative">
+        {/* Sign In button in top right corner */}
+        <div className="absolute top-4 right-4 z-50">
+          <Link 
+            to="/signin" 
+            className="px-6 py-2 rounded-lg bg-yellow-500 hover:bg-yellow-400 text-black font-semibold transition-all duration-300 shadow-lg hover:shadow-xl"
+          >
+            Sign In
+          </Link>
+        </div>
 
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="w-full max-w-3xl"
-      >
-        <div className="border border-gray-700 bg-gradient-to-tr from-gray-800 to-gray-700 rounded-xl shadow-xl overflow-hidden">
-          <div className="p-6 pb-4 border-b border-gray-700">
-            <div className="flex items-center gap-3">
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-              >
-                <Sparkles className="h-8 w-8 text-yellow-400" />
-              </motion.div>
-              <div>
-                <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-amber-300">
-                  LifeCost AI </h1>
-                <p className="text-gray-300 mt-1">
-                  Analyze the true cost of your life decisions
-                </p>
-              </div>
-            </div>
-          </div>
-          
-          <div className="p-6 space-y-6">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-300">Enter your decision</label>
-              <textarea
-                className="w-full min-h-[120px] p-4 bg-gray-900/60 border border-gray-600 rounded-lg text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-400"
-                placeholder="E.g. I want to drink bubble tea every day for a year."
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-gray-300">Or try one of these examples:</p>
-              <div className="flex flex-wrap gap-2">
-                {examples.map((example, index) => (
-                  <button 
-                    key={index}
-                    className="px-3 py-1 text-sm bg-gray-800/60 border border-gray-600 hover:bg-gray-700 text-gray-300 rounded-md transition-colors"
-                    onClick={() => setInput(example)}
-                  >
-                    {example}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-          
-          <div className="p-6 border-t border-gray-700">
-            <button
-              className="w-full font-semibold text-lg py-4 px-6 rounded-xl transition-all duration-300 shadow-lg bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-400 hover:to-amber-400 text-black flex items-center justify-center"
-              onClick={handleSubmit}
-              disabled={loading}
-            >
-              {loading ? (
+        {/* Remove SignUp component and continue with main content */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="w-full max-w-3xl"
+        >
+          <div className="border border-gray-700 bg-gradient-to-tr from-gray-800 to-gray-700 rounded-xl shadow-xl overflow-hidden">
+            <div className="p-6 pb-4 border-b border-gray-700">
+              <div className="flex items-center gap-3">
                 <motion.div
                   animate={{ rotate: 360 }}
-                  transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                  className="mr-2"
+                  transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
                 >
-                  <Clock className="h-5 w-5" />
+                  <Sparkles className="h-8 w-8 text-yellow-400" />
                 </motion.div>
-              ) : (
-                <Send className="mr-2 h-5 w-5" />
-              )}
-              {loading ? 'Analyzing, Please Wait...' : 'Analyze Decision'}
-            </button>
-            
-            {error && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mt-4 p-4 bg-red-900/40 border border-red-700 rounded-lg flex items-center gap-2 text-red-200"
-              >
-                <AlertCircle className="h-5 w-5 text-red-400" />
-                <p>{error}</p>
-              </motion.div>
-            )}
-          </div>
-        </div>
-        
-        {response && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="mt-8"
-          >
-            <div className="border border-gray-700 bg-gray-900/80 rounded-xl shadow-xl overflow-hidden">
-              <div className="p-4 bg-gray-800/60 border-b border-gray-700">
-                <h2 className="flex items-center gap-2 text-xl font-bold text-yellow-400">
-                  <DollarSign className="h-5 w-5" />
-                  Analysis Results
-                </h2>
-              </div>
-              <div className="p-6">
-                <div className="space-y-4">
-                  <div className="p-4 bg-gray-800/40 border border-gray-700 rounded-lg">
-                    <p className="text-sm font-medium text-gray-400">Your decision:</p>
-                    <p className="text-gray-200 italic">"{input}"</p>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <h3 className="text-lg font-semibold text-yellow-400">Impact Analysis:</h3>
-                    <p className="text-lg leading-relaxed text-gray-100 whitespace-pre-line">{response}</p>
-                  </div>
+                <div>
+                  <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-amber-300">
+                    LifeCost AI </h1>
+                  <p className="text-gray-300 mt-1">
+                    Analyze the true cost of your life decisions
+                  </p>
                 </div>
               </div>
             </div>
-          </motion.div>
-        )}
-      </motion.div>
-      
-      <footer className="mt-12 text-center text-gray-500 text-sm">
-        <p>© {new Date().getFullYear()} LifeCost AI • Analyze smarter, live better by Ansh Satish, Mayank Asrani and Josh</p>
-      </footer>
-    </div>
+
+            <div className="p-6 space-y-6">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-300">Enter your decision</label>
+                <textarea
+                  className="w-full min-h-[120px] p-4 bg-gray-900/60 border border-gray-600 rounded-lg text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                  placeholder="E.g. I want to drink bubble tea every day for a year."
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)} />
+              </div>
+
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-gray-300">Or try one of these examples:</p>
+                <div className="flex flex-wrap gap-2">
+                  {examples.map((example, index) => (
+                    <button
+                      key={index}
+                      className="px-3 py-1 text-sm bg-gray-800/60 border border-gray-600 hover:bg-gray-700 text-gray-300 rounded-md transition-colors"
+                      onClick={() => setInput(example)}
+                    >
+                      {example}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6 border-t border-gray-700">
+              <button
+                className="w-full font-semibold text-lg py-4 px-6 rounded-xl transition-all duration-300 shadow-lg bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-400 hover:to-amber-400 text-black flex items-center justify-center"
+                onClick={handleSubmit}
+                disabled={loading}
+              >
+                {loading ? (
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                    className="mr-2"
+                  >
+                    <Clock className="h-5 w-5" />
+                  </motion.div>
+                ) : (
+                  <Send className="mr-2 h-5 w-5" />
+                )}
+                {loading ? 'Analyzing, Please Wait...' : 'Analyze Decision'}
+              </button>
+
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-4 p-4 bg-red-900/40 border border-red-700 rounded-lg flex items-center gap-2 text-red-200"
+                >
+                  <AlertCircle className="h-5 w-5 text-red-400" />
+                  <p>{error}</p>
+                </motion.div>
+              )}
+            </div>
+          </div>
+
+          {response && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="mt-8"
+            >
+              <div className="border border-gray-700 bg-gray-900/80 rounded-xl shadow-xl overflow-hidden">
+                <div className="p-4 bg-gray-800/60 border-b border-gray-700">
+                  <h2 className="flex items-center gap-2 text-xl font-bold text-yellow-400">
+                    <DollarSign className="h-5 w-5" />
+                    Analysis Results
+                  </h2>
+                </div>
+                <div className="p-6">
+                  <div className="space-y-4">
+                    <div className="p-4 bg-gray-800/40 border border-gray-700 rounded-lg">
+                      <p className="text-sm font-medium text-gray-400">Your decision:</p>
+                      <p className="text-gray-200 italic">"{input}"</p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <h3 className="text-lg font-semibold text-yellow-400">Impact Analysis:</h3>
+                      <p className="text-lg leading-relaxed text-gray-100 whitespace-pre-line">{response}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </motion.div>
+
+        <footer className="mt-12 text-center text-gray-500 text-sm">
+          <p>© {new Date().getFullYear()} LifeCost AI • Analyze smarter, live better by Ansh Satish, Mayank Asrani and Josh Choong</p>
+        </footer>
+      </div>
+    </UserProvider>
   )
 }
 
