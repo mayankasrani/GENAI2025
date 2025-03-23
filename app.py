@@ -8,7 +8,9 @@ import base64
 from PIL import Image
 from io import BytesIO
 
-load_dotenv()
+# Modify this line to specify the path to your .env file
+load_dotenv(dotenv_path='../.env')
+print("GEMINI_API_KEY:", os.getenv('GEMINI_API_KEY'))  # Add this line for debugging
 
 app = Flask(__name__)
 CORS(app)
@@ -75,6 +77,15 @@ def analyze_image_route():
 @app.route('/test', methods=['GET'])
 def test():
     return jsonify({'message': 'Backend is working!'})
-
+# askjdkjasdh
+@app.route('/api-key-status', methods=['GET'])
+def api_key_status():
+    api_key = os.getenv('GEMINI_API_KEY')
+    if api_key:
+        # Return just the first few characters for verification
+        return jsonify({'status': 'API key found', 'preview': api_key[:5] + '...'})
+    else:
+        return jsonify({'status': 'API key not found'}), 404
+# jasdlakdsla
 if __name__ == '__main__':
     app.run(debug=True)

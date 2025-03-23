@@ -1,11 +1,22 @@
 import React, { useContext } from "react";
-import { Link } from "react-router-dom";
-import { Sparkles, History, Award } from 'lucide-react';
+import { Link, useNavigate } from "react-router-dom";
+import { Sparkles, History, Award, LogOut } from 'lucide-react';
 import UserContext from "../context/UserContext";
+import { supabase } from "../services/supabaseClient";
 
 const Header = () => {
   // Get user information from context
   const { user } = useContext(UserContext);
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      navigate('/'); // Redirect to home page after logout
+    } catch (error) {
+      console.error('Error logging out:', error);
+    }
+  };
 
   return (
     <div className="relative w-full p-4">
@@ -30,11 +41,18 @@ const Header = () => {
       ) : (
         // Signed in header - now using flexbox with vertical layout
         <div className="absolute top-4 w-full flex flex-col items-center py-2 px-4 space-y-4">
-          {/* Top row - Greeting */}
-          <div className="w-full flex justify-end">
+          {/* Top row - Greeting and Logout */}
+          <div className="w-full flex justify-between items-center">
             <p className="text-gray-200 font-medium">
               Hello, <span className="text-yellow-400 font-semibold">{user.user_metadata?.name || user.email}</span>
             </p>
+            <button 
+              onClick={handleLogout}
+              className="font-medium text-sm py-1 px-3 rounded-lg transition-all duration-300 bg-gray-700 hover:bg-gray-600 text-gray-200 flex items-center justify-center hover:-translate-y-0.5"
+            >
+              <LogOut className="mr-1 h-4 w-4" />
+              Logout
+            </button>
           </div>
           
           {/* Bottom row - Navigation buttons */}

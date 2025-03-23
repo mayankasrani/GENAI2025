@@ -74,7 +74,7 @@ const SignUp = () => {
         userid: data.user.id,
         username: formData.username,
         useremail: formData.email,
-        taskscompleted: 0  // Updated to match new schema
+        taskscompleted: 0  // Changed to match the database column name
       };
 
       const { error: statsError } = await supabase

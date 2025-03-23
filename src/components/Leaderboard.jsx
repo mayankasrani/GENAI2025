@@ -14,18 +14,27 @@ const Leaderboard = () => {
     const fetchLeaderboard = async () => {
       try {
         setLoading(true);
+        
         const { data, error } = await supabase
           .from('user_stats')
-          .select('username, tasksCompleted')
-          .order('tasksCompleted', { ascending: false });
+          .select('*')
+          .order('taskscompleted', { ascending: false });
 
-        if (error) throw error;
-        
-        if (data && data.length > 0) {
-          setUsers(data);
-          // Find the maximum number of tasks for scaling
-          const max = Math.max(...data.map(user => user.tasksCompleted || 0));
-          setMaxTasks(max > 0 ? max : 1); // Avoid division by zero
+        if (error) {
+          console.error('Supabase error:', error);
+          throw error;
+        }
+
+        if (data) {
+          const formattedData = data.map(user => ({
+            username: user.username,
+            tasksCompleted: user.taskscompleted || 0
+          }));
+
+          setUsers(formattedData);
+          
+          const max = Math.max(...formattedData.map(user => user.tasksCompleted || 0), 1);
+          setMaxTasks(max);
         }
       } catch (err) {
         console.error('Error fetching leaderboard:', err);
@@ -38,7 +47,20 @@ const Leaderboard = () => {
     fetchLeaderboard();
   }, []);
 
-  // Function to get rank icon based on position
+  const getBarColor = (index) => {
+    switch (index) {
+      case 0:
+        return "linear-gradient(to right, #FFD700, #FFEC8B)";  // Gold
+      case 1:
+        return "linear-gradient(to right, #C0C0C0, #D3D3D3)";  // Silver
+      case 2:
+        return "linear-gradient(to right, #CD7F32, #D2691E)";  // Bronze
+      default:
+        return "linear-gradient(to right, #4B5563, #374151)";  // Gray
+    }
+  };
+  
+
   const getRankIcon = (index) => {
     switch (index) {
       case 0:
@@ -97,18 +119,27 @@ const Leaderboard = () => {
                     {getRankIcon(index)}
                   </div>
                   <h3 className="text-xl font-semibold text-yellow-400">{user.username}</h3>
-                  <span className="ml-auto text-gray-300">{user.tasksCompleted} tasks</span>
+                  <span className="ml-auto text-gray-300"> {user.tasksCompleted} tasks</span>
                 </div>
                 
-                <div className="w-full bg-gray-700/50 rounded-full h-6 overflow-hidden">
-                  <motion.div 
-                    className="bg-gradient-to-r from-yellow-500 to-amber-500 h-full rounded-full"
-                    initial={{ width: 0 }}
-                    animate={{ 
-                      width: `${(user.tasksCompleted / maxTasks) * 100}%` 
+                <div className="w-full bg-gray-700/50 rounded-full h-12 overflow-hidden">
+                <motion.div
+                    className="h-24 rounded-r-full rounded-l-none flex items-center pl-4"
+                    style={{ 
+                        width: `${(user.tasksCompleted / maxTasks) * 100}%`, 
+                        background: getBarColor(index),
+                        boarderRadius: '0 50px 50px 0'
                     }}
+                    initial={{ width: 0 }}
+                    animate={{ width: `${(user.tasksCompleted / maxTasks) * 100}%` }}
                     transition={{ duration: 1, ease: "easeOut" }}
-                  />
+                    >
+                    {user.tasksCompleted > 0 && (
+                        <span className="text-lg font-medium text-white drop-shadow-md">
+                        {user.tasksCompleted}
+                        </span>
+                    )}
+                    </motion.div>
                 </div>
               </motion.div>
             ))}
