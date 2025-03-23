@@ -24,13 +24,26 @@ def get_gemini_analysis(query):
     prompt = f"Analyze the following life choice: '{query}'. Provide a brief qualitative analysis of its financial, health, and environmental impacts."
     try:
         response = model.generate_content(prompt)
-        if response.text == None:
-            return "Gemini returned no response"
-        return response.text
+        if response.text is None:
+            return "Gemini returned no response", 0
+        
+        # Determine if the idea is positive or negative
+        is_positive = 1 if "positive" in response.text.lower() else 0
+        return response.text, is_positive
     except Exception as e:
         error_message = f"Error during Gemini API call: {e}"
-        print(error_message) #For debugging
-        return error_message
+        print(error_message)  # For debugging
+        return error_message, 0
+
+@app.route('/analyze', methods=['POST'])
+def analyze_choice():
+    data = request.get_json()
+    query = data.get('query')
+    if not query:
+        return jsonify({'error': 'Query is required'}), 400
+
+    analysis, is_positive = get_gemini_analysis(query)
+    return jsonify({'analysis': analysis, 'isPositive': is_positive})
 
 def analyze_image(image_data, prompt_text):
     try:
@@ -51,16 +64,6 @@ def analyze_image(image_data, prompt_text):
         error_message = f"Error during image analysis: {e}"
         print(error_message)  # For debugging
         return error_message
-
-@app.route('/analyze', methods=['POST'])
-def analyze_choice():
-    data = request.get_json()
-    query = data.get('query')
-    if not query:
-        return jsonify({'error': 'Query is required'}), 400
-
-    analysis = get_gemini_analysis(query)
-    return jsonify({'analysis': analysis})  # Changed back to 'analysis' to match frontend
 
 @app.route('/analyze-image', methods=['POST'])
 def analyze_image_route():

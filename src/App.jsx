@@ -21,6 +21,7 @@ function App() {
   const [imagePreview, setImagePreview] = useState(null)
   const [hasSubmittedQuery, setHasSubmittedQuery] = useState(false) // Track if user has submitted a query
   const [lastQuery, setLastQuery] = useState('') // Store the last query for verification
+  const [isPositiveDecision, setIsPositiveDecision] = useState(false) // Track if decision is positive
   const fileInputRef = useRef(null)
 
   const showToastMessage = (title, message, type) => 
@@ -64,85 +65,90 @@ function App() {
     }
   }
 
+  const [isPositiveIdea, setIsPositiveIdea] = useState(null); // New state to track idea positivity
+
   const handleSubmit = async () => {
-    if (!input.trim() && !selectedImage) {
-      showToastMessage('Input required', 'Please enter a decision to analyze', 'error')
-      return
+    if (!input.trim()) {
+      showToastMessage('Input required', 'Please enter a decision to analyze', 'error');
+      return;
     }
-    
-    setLoading(true)
-    setError('')
-    
+
+    setLoading(true);
+    setError('');
+
     try {
-      let res
-      
-      if (selectedImage && hasSubmittedQuery) {
-        // If we have an image and a previous query, we're verifying activity
-        const reader = new FileReader()
-        reader.readAsDataURL(selectedImage)
-        
-        const base64Image = await new Promise((resolve, reject) => {
-          reader.onload = () => resolve(reader.result)
-          reader.onerror = reject
-        })
-        
-        // Send image with verification prompt
-        res = await axios.post('http://localhost:5000/analyze-image', { 
-          image: base64Image,
-          prompt: `Based on this image, is the person partaking in the activity they described: "${lastQuery}"? Provide an analysis.`
-        })
-      } else {
-        // Text-only analysis for initial query
-        res = await axios.post('http://localhost:5000/analyze', { query: input })
-        // Save this query for future verification
-        setLastQuery(input)
-        // Mark that user has submitted a query
-        setHasSubmittedQuery(true)
-      }
-      
+      const res = await axios.post('http://localhost:5000/analyze', { query: input });
+
       if (res.data.analysis) {
-        setResponse(res.data.analysis)
-        showToastMessage('Analysis complete', 'Your request has been analyzed', 'success')
-        // Clear image after submission
-        if (selectedImage) {
-          removeImage()
-        }
+        setResponse(res.data.analysis);
+        setIsPositiveIdea(res.data.isPositive); // Set the boolean value
+        showToastMessage('Analysis complete', 'Your request has been analyzed', 'success');
       } else {
-        throw new Error('No analysis received')
+        throw new Error('No analysis received');
       }
     } catch (err) {
-      console.error('Error:', err)
-      setError('Failed to analyze your request. Please try again.')
-      showToastMessage('Something went wrong', 'Failed to analyze your request', 'error')
+      console.error('Error:', err);
+      setError('Failed to analyze your request. Please try again.');
+      showToastMessage('Something went wrong', 'Failed to analyze your request', 'error');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const examples = [
     "I want to drink bubble tea every day for a year.",
-    "I'm considering buying a gaming console for $600.",
-    "Should I subscribe to 3 streaming services?",
-    "Should I pull an all-nighter to study for my calc test"
-  ]
+    "I am going to go to the gym three times a week.",
+    "Should I subscribe to 4 streaming services?",
+    "Is it a problem if I only eat instant ramen noodles?"
+  ];
 
-  // Add this useEffect right after your state declarations
-  useEffect(() => {
-    const testConnection = async () => {
-      try {
-        const response = await axios.get('http://localhost:5000/test')
-        console.log('Backend connection successful:', response.data)
-      } catch (error) {
-        console.error('Backend connection failed:', error)
-      }
+  const handleButtonClick = () => {
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = 'image/*';
+    fileInput.onchange = handleImageUpload;
+    fileInput.click();
+  };
+
+  const handleImageVerification = async () => {
+    if (!selectedImage) {
+        showToastMessage('Image required', 'Please upload an image to verify', 'error');
+        return;
     }
-    testConnection()
-  }, [])
+
+    setLoading(true);
+    setError('');
+
+    try {
+        const reader = new FileReader();
+        reader.onloadend = async () => {
+            const base64Image = reader.result;
+            const res = await axios.post('http://localhost:5000/analyze-image', {
+                image: base64Image,
+                prompt: `Verify the activity: "${lastQuery}"`
+            });
+
+            if (res.data.analysis) {
+                setResponse(res.data.analysis);
+                showToastMessage('Verification complete', 'Your image has been verified', 'success');
+            } else {
+                throw new Error('No analysis received');
+            }
+        };
+        reader.readAsDataURL(selectedImage);
+    } catch (err) {
+        console.error('Error:', err);
+        setError('Failed to verify your image. Please try again.');
+        showToastMessage('Something went wrong', 'Failed to verify your image', 'error');
+    } finally {
+        setLoading(false);
+    }
+  };
 
   return (
     <UserProvider>
       <div className="min-h-screen flex flex-col items-center justify-center p-4 md:p-8 bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white relative">
-        <Header /> 
+        <Header />
         <div className="absolute top-4 right-4 z-50 flex gap-4">
         </div>
 
@@ -165,14 +171,13 @@ function App() {
                   <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-amber-300">
                     LifeCost AI </h1>
                   <p className="text-gray-300 mt-1">
-                    Analyze the true cost of your life decisions
+                    Analyze the cost of your choices - whats the price to pay, or how much could you gain?
                   </p>
                 </div>
               </div>
             </div>
 
             <div className="p-6 space-y-6">
-              {/* Remove this duplicate sign in/up section */}
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-300">Enter your decision</label>
                 <textarea
@@ -182,21 +187,31 @@ function App() {
                   onChange={(e) => setInput(e.target.value)} />
               </div>
 
-              {/* Image Upload Section - Only show after initial query */}
-              {hasSubmittedQuery && (
+              {/* Always show examples */}
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-gray-300">Or try one of these examples:</p>
+                <div className="flex flex-wrap gap-2">
+                  {examples.map((example, index) => (
+                    <button
+                      key={index}
+                      className="px-3 py-1 text-sm bg-gray-800/60 border border-gray-600 hover:bg-gray-700 text-gray-300 rounded-md transition-colors"
+                      onClick={() => setInput(example)}
+                    >
+                      {example}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Conditionally render image upload section based on isPositiveIdea */}
+              {isPositiveIdea === 1 && (
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-gray-300">Upload an image to verify if you're doing this activity</label>
                   <div className="flex items-center gap-4">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageUpload}
-                      className="hidden"
-                      ref={fileInputRef}
-                    />
+                    
                     <button
-                      onClick={() => fileInputRef.current.click()}
-                      className="px-4 py-2 bg-gray-800/60 border border-gray-600 hover:bg-gray-700 text-gray-300 rounded-md transition-colors flex items-center gap-2"
+                      onClick={handleButtonClick}
+                      className="px-6 py-4 bg-gray-800/60 border border-gray-600 hover:bg-gray-700 text-gray-300 rounded-md transition-colors flex items-center gap-3"
                     >
                       <Upload className="h-4 w-4" />
                       Upload Verification Image
@@ -224,30 +239,12 @@ function App() {
                   )}
                 </div>
               )}
-
-              {/* Only show examples if no query has been submitted yet */}
-              {!hasSubmittedQuery && (
-                <div className="space-y-2">
-                  <p className="text-sm font-medium text-gray-300">Or try one of these examples:</p>
-                  <div className="flex flex-wrap gap-2">
-                    {examples.map((example, index) => (
-                      <button
-                        key={index}
-                        className="px-3 py-1 text-sm bg-gray-800/60 border border-gray-600 hover:bg-gray-700 text-gray-300 rounded-md transition-colors"
-                        onClick={() => setInput(example)}
-                      >
-                        {example}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
 
             <div className="p-6 border-t border-gray-700">
               <button
                 className="w-full font-semibold text-lg py-4 px-6 rounded-xl transition-all duration-300 shadow-lg bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-400 hover:to-amber-400 text-black flex items-center justify-center"
-                onClick={handleSubmit}
+                onClick={isPositiveIdea === 1 ? handleImageVerification : handleSubmit}
                 disabled={loading}
               >
                 {loading ? (
@@ -261,7 +258,7 @@ function App() {
                 ) : (
                   <Send className="mr-2 h-5 w-5" />
                 )}
-                {loading ? 'Analyzing, Please Wait...' : selectedImage ? 'Verify Activity' : 'Analyze Decision'}
+                {loading ? 'Processing, Please Wait...' : isPositiveIdea === 1 ? 'Verify Activity' : 'Analyze Decision'}
               </button>
 
               {error && (

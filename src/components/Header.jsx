@@ -41,39 +41,32 @@ const Header = () => {
       ) : (
         // Signed in header - now using flexbox with vertical layout
         <div className="absolute top-4 w-full flex flex-col items-center py-2 px-4 space-y-4">
-          {/* Top row - Greeting and Logout */}
-          <div className="w-full flex justify-between items-center">
-            <p className="text-gray-200 font-medium">
-              Hello, <span className="text-yellow-400 font-semibold">{user.user_metadata?.name || user.email}</span>
-            </p>
-            <button 
-              onClick={handleLogout}
-              className="font-medium text-sm py-1 px-3 rounded-lg transition-all duration-300 bg-gray-700 hover:bg-gray-600 text-gray-200 flex items-center justify-center hover:-translate-y-0.5"
-            >
-              <LogOut className="mr-1 h-4 w-4" />
-              Logout
-            </button>
-          </div>
-          
-          {/* Bottom row - Navigation buttons */}
-          <div className="w-full flex justify-center space-x-4">
-            <Link 
-              to="/my-tasks" 
-              className="font-semibold text-lg py-2 px-6 rounded-xl transition-all duration-300 shadow-lg bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-400 hover:to-amber-400 text-black flex items-center justify-center hover:-translate-y-0.5"
-            >
-              <History className="mr-2 h-5 w-5" />
-              My Goals
-            </Link>
-            
-            <Link 
-              to="/leaderboard" 
-              className="font-semibold text-lg py-2 px-6 rounded-xl transition-all duration-300 shadow-lg bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-black flex items-center justify-center hover:-translate-y-0.5"
-            >
-              <Award className="mr-2 h-5 w-5" />
-              Leaderboard
-            </Link>
-          </div>
-        </div>
+  {/* Top row - Greeting */}
+  <div className="center">
+    <p className="text-gray-200 font-medium">
+      Hello, <span className="text-yellow-400 font-semibold">{user.user_metadata?.name || user.email}</span>
+    </p>
+  </div>
+
+  {/* Bottom row - Identical Buttons with Proper Spacing */}
+  <div className="w-full flex justify-center gap-6">
+    <Link 
+      to="/leaderboard" 
+      className="font-semibold text-lg py-3 px-6 rounded-xl transition-all duration-300 shadow-lg bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-black flex items-center justify-center hover:-translate-y-0.5 min-w-[160px]"
+    >
+      <Award className="h-5 w-5 mr-2" />
+      <span>Leaderboard</span>
+    </Link>
+        <p className="size-sm">&#8203;  &#8203; &#8203; &#8203; &#8203; &#8203;</p>
+    <button 
+      onClick={handleLogout}
+      className="font-semibold text-lg py-3 px-6 rounded-xl transition-all duration-300 shadow-lg bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-black flex items-center justify-center hover:-translate-y-0.5 min-w-[160px] border-transparent"
+    >
+      <LogOut className="h-5 w-5 mr-2" />
+      <span>Logout</span>
+    </button>
+  </div>
+</div>
       )}
     </div>
   );
