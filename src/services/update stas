@@ -1,0 +1,26 @@
+// // Example of how to increment tasks completed
+// const incrementTasksCompleted = async (userId) => {
+//   try {
+//     // First get current stats
+//     const { data: currentStats, error: fetchError } = await supabase
+//       .from('user_stats')
+//       .select('tasksCompleted')
+//       .eq('userId', userId)
+//       .single();
+    
+//     if (fetchError) throw fetchError;
+    
+//     // Then update with incremented value
+//     const { error: updateError } = await supabase
+//       .from('user_stats')
+//       .update({ 
+//         tasksCompleted: (currentStats.tasksCompleted || 0) + 1 
+//       })
+//       .eq('userId', userId);
+    
+//     if (updateError) throw updateError;
+    
+//   } catch (error) {
+//     console.error('Error incrementing tasks completed:', error);
+//   }
+// };

@@ -1,13 +1,14 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import axios from 'axios'
 import { motion } from 'framer-motion'
 import './App.css'
 
-import { Sparkles, Clock, DollarSign, AlertCircle, Send } from 'lucide-react'
+import { Sparkles, Clock, DollarSign, AlertCircle, Send, Upload, Image as ImageIcon, X } from 'lucide-react'
 import { UserProvider } from './context/UserContext';
 import SignUp from './components/SignUp';
 import { Link } from 'react-router-dom';
 import Header from './components/header'
+import { useEffect } from 'react'
 
 function App() {
   const [input, setInput] = useState('')
@@ -16,6 +17,11 @@ function App() {
   const [error, setError] = useState('')
   const [showToast, setShowToast] = useState(false)
   const [toast, setToast] = useState({ title: '', message: '', type: '' })
+  const [selectedImage, setSelectedImage] = useState(null)
+  const [imagePreview, setImagePreview] = useState(null)
+  const [hasSubmittedQuery, setHasSubmittedQuery] = useState(false) // Track if user has submitted a query
+  const [lastQuery, setLastQuery] = useState('') // Store the last query for verification
+  const fileInputRef = useRef(null)
 
   const showToastMessage = (title, message, type) => 
   {
@@ -24,26 +30,90 @@ function App() {
     setTimeout(() => setShowToast(false), 3000)
   }
 
-  const handleSubmit = async () => 
-  {
-    //Checks if field is not empty
-    if (!input.trim()) 
-    {
-      showToastMessage('This field cannot be left blank', 'Please enter a decision to analyze', 'error')
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+
+    // Check if file is an image
+    if (!file.type.startsWith('image/')) {
+      showToastMessage('Invalid file', 'Please upload an image file', 'error')
+      return
+    }
+
+    // Check file size (limit to 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      showToastMessage('File too large', 'Please upload an image smaller than 5MB', 'error')
+      return
+    }
+
+    setSelectedImage(file)
+    
+    // Create preview
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      setImagePreview(reader.result)
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const removeImage = () => {
+    setSelectedImage(null)
+    setImagePreview(null)
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
+  }
+
+  const handleSubmit = async () => {
+    if (!input.trim() && !selectedImage) {
+      showToastMessage('Input required', 'Please enter a decision to analyze', 'error')
       return
     }
     
     setLoading(true)
     setError('')
     
-    try 
-    {
-      const res = await axios.post('http://localhost:5000/analyze', { text: input })
-      setResponse(res.data.result)
-      showToastMessage('Analysis complete', 'Your decision has been analyzed', 'success')
+    try {
+      let res
+      
+      if (selectedImage && hasSubmittedQuery) {
+        // If we have an image and a previous query, we're verifying activity
+        const reader = new FileReader()
+        reader.readAsDataURL(selectedImage)
+        
+        const base64Image = await new Promise((resolve, reject) => {
+          reader.onload = () => resolve(reader.result)
+          reader.onerror = reject
+        })
+        
+        // Send image with verification prompt
+        res = await axios.post('http://localhost:5000/analyze-image', { 
+          image: base64Image,
+          prompt: `Based on this image, is the person partaking in the activity they described: "${lastQuery}"? Provide an analysis.`
+        })
+      } else {
+        // Text-only analysis for initial query
+        res = await axios.post('http://localhost:5000/analyze', { query: input })
+        // Save this query for future verification
+        setLastQuery(input)
+        // Mark that user has submitted a query
+        setHasSubmittedQuery(true)
+      }
+      
+      if (res.data.analysis) {
+        setResponse(res.data.analysis)
+        showToastMessage('Analysis complete', 'Your request has been analyzed', 'success')
+        // Clear image after submission
+        if (selectedImage) {
+          removeImage()
+        }
+      } else {
+        throw new Error('No analysis received')
+      }
     } catch (err) {
-      setError('Failed to analyze your decision. Please try again.')
-      showToastMessage('Something went wrong', 'Failed to analyze your decision', 'error')
+      console.error('Error:', err)
+      setError('Failed to analyze your request. Please try again.')
+      showToastMessage('Something went wrong', 'Failed to analyze your request', 'error')
     } finally {
       setLoading(false)
     }
@@ -55,6 +125,19 @@ function App() {
     "Should I subscribe to 3 streaming services?",
     "Should I pull an all-nighter to study for my calc test"
   ]
+
+  // Add this useEffect right after your state declarations
+  useEffect(() => {
+    const testConnection = async () => {
+      try {
+        const response = await axios.get('http://localhost:5000/test')
+        console.log('Backend connection successful:', response.data)
+      } catch (error) {
+        console.error('Backend connection failed:', error)
+      }
+    }
+    testConnection()
+  }, [])
 
   return (
     <UserProvider>
@@ -99,20 +182,66 @@ function App() {
                   onChange={(e) => setInput(e.target.value)} />
               </div>
 
-              <div className="space-y-2">
-                <p className="text-sm font-medium text-gray-300">Or try one of these examples:</p>
-                <div className="flex flex-wrap gap-2">
-                  {examples.map((example, index) => (
+              {/* Image Upload Section - Only show after initial query */}
+              {hasSubmittedQuery && (
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-300">Upload an image to verify if you're doing this activity</label>
+                  <div className="flex items-center gap-4">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="hidden"
+                      ref={fileInputRef}
+                    />
                     <button
-                      key={index}
-                      className="px-3 py-1 text-sm bg-gray-800/60 border border-gray-600 hover:bg-gray-700 text-gray-300 rounded-md transition-colors"
-                      onClick={() => setInput(example)}
+                      onClick={() => fileInputRef.current.click()}
+                      className="px-4 py-2 bg-gray-800/60 border border-gray-600 hover:bg-gray-700 text-gray-300 rounded-md transition-colors flex items-center gap-2"
                     >
-                      {example}
+                      <Upload className="h-4 w-4" />
+                      Upload Verification Image
                     </button>
-                  ))}
+                    {imagePreview && (
+                      <div className="relative">
+                        <img 
+                          src={imagePreview} 
+                          alt="Preview" 
+                          className="h-16 w-16 object-cover rounded-md border border-gray-600" 
+                        />
+                        <button 
+                          onClick={removeImage}
+                          className="absolute -top-2 -right-2 bg-red-500 rounded-full p-1 text-white"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  {imagePreview && (
+                    <p className="text-xs text-gray-400">
+                      This image will be used to verify if you're doing the activity: "{lastQuery}"
+                    </p>
+                  )}
                 </div>
-              </div>
+              )}
+
+              {/* Only show examples if no query has been submitted yet */}
+              {!hasSubmittedQuery && (
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-gray-300">Or try one of these examples:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {examples.map((example, index) => (
+                      <button
+                        key={index}
+                        className="px-3 py-1 text-sm bg-gray-800/60 border border-gray-600 hover:bg-gray-700 text-gray-300 rounded-md transition-colors"
+                        onClick={() => setInput(example)}
+                      >
+                        {example}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="p-6 border-t border-gray-700">
@@ -132,7 +261,7 @@ function App() {
                 ) : (
                   <Send className="mr-2 h-5 w-5" />
                 )}
-                {loading ? 'Analyzing, Please Wait...' : 'Analyze Decision'}
+                {loading ? 'Analyzing, Please Wait...' : selectedImage ? 'Verify Activity' : 'Analyze Decision'}
               </button>
 
               {error && (
